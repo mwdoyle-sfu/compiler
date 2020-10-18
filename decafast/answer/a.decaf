@@ -1,0 +1,6 @@
+package Test {
+	func main() void
+	{
+		var c int;
+	}
+}

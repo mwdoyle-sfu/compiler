@@ -1,0 +1,2 @@
+Error: unexpected character in input
+2: syntax error, unexpected $end, expecting T_BOOL or T_INTTYPE at char [
