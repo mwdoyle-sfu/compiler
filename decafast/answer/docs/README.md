@@ -57,5 +57,8 @@ Program(ExternFunction(print_int,VoidType,VarDef(IntType)))
 python3 zipout.py -r decafast
 python3 check.py -l log
 
-decafast.lex
-git add decafast.cc decafast.y docs/README.md
+
+git add decafast.lex decafast.cc decafast.y docs/README.md
+
+
+grep -r "Diff" log

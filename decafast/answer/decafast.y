@@ -37,20 +37,20 @@ using namespace std;
 %token T_ASSIGN T_VOID T_BOOL T_INTTYPE T_STRINGTYPE
 %token T_EXTERN T_PACKAGE T_COMMA T_PLUS
 %token T_LCB T_LPAREN T_RPAREN T_SEMICOLON 
-%token T_RCB T_VAR T_WHILE T_BREAK
+%token T_RCB T_VAR T_WHILE T_BREAK T_RETURN
 %token T_FUNC T_TRUE T_FALSE T_FOR T_LSB T_RSB
 
 %token T_MINUS T_MULT T_DIV T_MOD T_LEFTSHIFT T_RIGHTSHIFT T_AND T_OR T_EQ T_GEQ
-%token T_GT T_LEQ T_LT T_NEQ UMINUS T_NOT 
+%token T_GT T_LEQ T_LT T_NEQ UMINUS T_NOT T_CONTINUE T_IF T_ELSE
 
 
 %token <number> T_CHARCONSTANT T_INTCONSTANT 
 %token <sval> T_ID T_STRINGCONSTANT
 
 %type <ast> vardecl bool_constant extern_list decafpackage externvars fieldtype constant vardecls statement_list
-%type <ast>  externtype externdefn field_decl field_decls methoddecl methoddecls methodtype methodblock
-%type <ast>  externvar statement assigns assign lvalue expr methodcall methodarguments methodargument
-%type <ast> arraydecl
+%type <ast> externtype externdefn field_decl field_decls methoddecl methoddecls methodtype methodblock
+%type <ast> externvar statement assigns assign lvalue expr methodcall methodarguments methodargument
+%type <ast> return block if
 
 %left T_OR
 %left T_AND
@@ -198,25 +198,24 @@ statement_list: statement statement_list { decafStmtList *slist = (decafStmtList
     |           /* empty */ {decafStmtList *slist = new decafStmtList(); $$ = slist;}   
     ;
 
-
 // new stuff
 
 statement: methodcall T_SEMICOLON { $$ = $1;}
     |      assign T_SEMICOLON { $$ = $1; }
-//     // |       if { $$ = $1; }
-//     // |       T_WHILE T_LPAREN expr T_RPAREN block { $$ = new WhileAST($3,$5); }
-//     // |       T_FOR T_LPAREN assigns T_SEMICOLON expr T_SEMICOLON assigns T_RPAREN block { $$ = new ForAST($3,$5,$7,$9);}
-//     // |       T_BREAK T_SEMICOLON { $$ = new GenericAST("BreakStmt");}
-//     // |       T_CONTINUE T_SEMICOLON { $$ = new GenericAST("ContinueStmt");}
-//     // |       return { $$ = $1;}
-//     // |       block { $$ = $1; }
+    |       if { $$ = $1; }
+    |       T_WHILE T_LPAREN expr T_RPAREN block { $$ = new WhileAST($3,$5); }
+    |       T_FOR T_LPAREN assigns T_SEMICOLON expr T_SEMICOLON assigns T_RPAREN block { $$ = new ForAST($3,$5,$7,$9);}
+    |       T_BREAK T_SEMICOLON { $$ = new GenericAST("BreakStmt");}
+    |       T_CONTINUE T_SEMICOLON { $$ = new GenericAST("ContinueStmt");}
+    |       return { $$ = $1;}
+    |       block { $$ = $1; }
     ;
 
 // // below here...
 
-// assigns: assign assigns { decafStmtList *slist = (decafStmtList *)$2; slist->push_front($1); $$ = slist; }
-//     |    /* empty */ { decafStmtList *slist = new decafStmtList(); $$ = slist; }
-//     ;
+assigns: assign assigns { decafStmtList *slist = (decafStmtList *)$2; slist->push_front($1); $$ = slist; }
+    | /* empty */ { decafStmtList *slist = new decafStmtList(); $$ = slist; }
+    ;
 
 // check the formatting
 assign: T_ID T_ASSIGN expr { $$ = new AssignVarAST(*$1, $3); delete $1; }
@@ -261,11 +260,20 @@ methodarguments: methodargument methodarguments { decafStmtList *slist = (decafS
 
 methodargument: T_STRINGCONSTANT { $$ = new StringConstAST(*$1); }
     |           expr {$$ = $1;} 
-    |            /* empty */ { decafStmtList *slist = new decafStmtList(); $$ = slist; }
-        ;
+    |           /* empty */ { decafStmtList *slist = new decafStmtList(); $$ = slist; }
+    ;
 
+return:  T_RETURN T_SEMICOLON { $$ = new ReturnAST(NULL); }
+    |    T_RETURN T_LPAREN T_RPAREN T_SEMICOLON { $$ = new ReturnAST(NULL); }
+    |    T_RETURN T_LPAREN expr T_RPAREN T_SEMICOLON { $$ = new ReturnAST($3); }
+    ;
 
+if:   T_IF T_LPAREN expr T_RPAREN block { $$ = new IfElseAST($3,$5, NULL); }
+    | T_IF T_LPAREN expr T_RPAREN block T_ELSE block { $$ = new IfElseAST($3,$5,$7); }
+    ;
 
+block: T_LCB vardecls statement_list T_RCB { $$ = new BlockAST($2,$3);}
+    ;
 
 %%
 

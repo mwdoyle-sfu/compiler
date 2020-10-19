@@ -316,3 +316,48 @@ public:
 	}
 	string str() { return string("AssignArrayLoc") + "(" + Name + "," + getString(Expr) + "," + getString(Value) + ")"; }
 };
+
+class ReturnAST : public decafAST {
+	decafAST *AST;
+public:
+	ReturnAST(decafAST *ast) : AST(ast) {}
+	string str() { return string("ReturnStmt") + "(" + getString(AST) + ")"; }
+
+	//const std::string &getName() const { return Name; }
+};
+
+/// BlockAST -  class for a block
+class BlockAST : public decafAST {
+	decafAST *LHS, *RHS;
+public:
+	BlockAST(decafAST *lhs, decafAST *rhs) : LHS(lhs), RHS(rhs) {}
+	~BlockAST() { delete LHS; delete RHS; }
+	string str() { return string("Block") + "(" + getString(LHS) + "," + getString(RHS) + ")"; }
+
+};
+
+/// IfElseAst -  class for a if
+class IfElseAST: public decafAST {
+	decafAST *LHS, *RHS, *EHS;
+public:
+	IfElseAST(decafAST *lhs, decafAST *rhs, decafAST *ehs) : LHS(lhs), RHS(rhs), EHS(ehs) {}
+	~IfElseAST() { delete LHS; delete RHS; delete EHS; }
+	string str() { return string("IfStmt") + "(" + getString(LHS) + "," + getString(RHS) + "," + getString(EHS) + ")"; }
+};
+
+/// WhileAst -  class for a while
+class WhileAST : public decafAST {
+	decafAST *LHS, *RHS;
+public:
+	WhileAST(decafAST *lhs, decafAST *rhs) : LHS(lhs), RHS(rhs) {}
+	~WhileAST() { delete LHS; delete RHS; }
+	string str() { return string("WhileStmt") + "(" + getString(LHS) + "," + getString(RHS) + ")"; }
+};
+
+class ForAST : public decafAST {
+	decafAST *LHS1,*LHS2,*RHS1,*RHS2;
+public:
+	ForAST(decafAST *lhs1, decafAST *lhs2, decafAST *rhs1, decafAST *rhs2) : LHS1(lhs1), LHS2(lhs2), RHS1(rhs1), RHS2(rhs2) {}
+	~ForAST() { delete LHS1; delete LHS2; delete RHS1; delete RHS2; }
+	string str() { return string("ForStmt") + "(" + getString(LHS1) + "," + getString(LHS2) + "," + getString(RHS1) + "," + getString(RHS2) + ")"; }
+};

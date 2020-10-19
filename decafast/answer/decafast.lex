@@ -130,12 +130,15 @@ bool                       { return T_BOOL; }
 break                      { return T_BREAK; }
 {char_lit}                 { yylval.number = get_charconstant(yytext); return T_CHARCONSTANT;  }
 ,                          { return T_COMMA; }
+continue                   { return T_CONTINUE; }
 \/                         { return T_DIV; }
+else                       { return T_ELSE; }
 ==                         { return T_EQ; }
 
 extern                     { return T_EXTERN; }
 \>=                        { return T_GEQ; }
 \>                         { return T_GT; }
+if                         { return T_IF; }
 
 false                      { return T_FALSE; }
 for                        { return T_FOR; }
@@ -168,6 +171,7 @@ void                       { return T_VOID; }
 \|\|                       { return T_OR; }
 
 \}                         { return T_RCB; }
+return                     { return T_RETURN; }
 \>>                        { return T_RIGHTSHIFT; }
 \)                         { return T_RPAREN; }
 \]                           { return T_RSB; }
