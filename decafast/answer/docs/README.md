@@ -50,3 +50,12 @@ extern func print_string(string) void;
 
 Program(ExternFunction(print_int,VoidType,VarDef(IntType)))
 
+
+
+
+
+python3 zipout.py -r decafast
+python3 check.py -l log
+
+decafast.lex
+git add decafast.cc decafast.y docs/README.md

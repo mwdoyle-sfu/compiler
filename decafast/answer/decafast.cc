@@ -22,6 +22,45 @@ string getType(int Op) {
 	}
 }
 
+string BinaryOpString(int Op) {
+	switch (Op) {
+		case T_PLUS: return string("Plus");
+  		case T_MINUS: return string("Minus");
+  		case T_MULT: return string("Mult");
+  		case T_DIV: return string("Div");
+  		case T_MOD: return string("Mod");
+  		case T_LEFTSHIFT: return string("Leftshift");
+  		case T_RIGHTSHIFT: return string("Rightshift");
+  		case T_AND: return string("And");
+  		case T_OR: return string("Or");
+  		case T_EQ: return string("Eq");
+  		case T_GEQ: return string("Geq");
+  		case T_GT: return string("Gt");
+  		case T_LEQ: return string("Leq");
+  		case T_LT: return string("Lt");
+  		case T_NEQ: return string("Neq");
+  
+		default: throw runtime_error("unknown type in BinaryOpString call");
+	}
+}
+
+string UnaryOpString(int Op) {
+	switch (Op) {
+  		case T_MINUS: return string("UnaryMinus");
+  		case T_NOT: return string("Not");
+  		case T_BREAK: return string("BreakStmt");
+		default: throw runtime_error("unknown type in UnaryOpString call");
+	}
+}
+
+string convertInt(int number) {
+	stringstream ss;
+	ss << number;
+	return ss.str();
+}
+
+
+
 
 /// decafAST - Base class for all abstract syntax tree nodes.
 class decafAST {
@@ -163,24 +202,12 @@ public:
 	} 
 };
 
-string convertInt(int number) {
-	stringstream ss;
-	ss << number;
-	return ss.str();
-}
-
-// string buildString1(const char *Name, decafAST *a) {
-// 	return string(Name) + "(" + getString(a) + ")";
-// }
-
-
 class NumberExprAST : public decafAST {
 	int Val;
 public:
 	NumberExprAST(int val) : Val(val) {}
 	string str() { return string("NumberExpr") + "(" + convertInt(Val) + ")"; }
 };
-
 
 class MethodDeclarationAST : public decafAST {
 	string Name;
@@ -205,7 +232,7 @@ class VarDefMethodBlockAST : public decafAST {
 public:
 	VarDefMethodBlockAST(int op, string name) : Op(op), Name(name){}
 	~VarDefMethodBlockAST() {  }
-	string str() { return string("VarDef") + "(" + getType(Op) + ")"; }
+	string str() { return string("VarDef") + "(" + Name + "," + getType(Op) + ")"; }
 };
 
 class MethodCallAST : public decafAST {
@@ -239,4 +266,53 @@ public:
 		if (Value != NULL) { delete Value; }
 	}
 	string str() { return string("AssignVar") + "(" + Name + "," + getString(Value) + ")"; }
+};
+
+class BinaryExprAST : public decafAST {
+	int Op; // use the token value of the operator
+	decafAST *LHS, *RHS;
+public:
+	BinaryExprAST(int op, decafAST *lhs, decafAST *rhs) : Op(op), LHS(lhs), RHS(rhs) {}
+	~BinaryExprAST() { delete LHS; delete RHS; }
+	string str() { return string("BinaryExpr") + "(" + BinaryOpString(Op) + "," + getString(LHS) + "," + getString(RHS) + ")"; }
+};
+
+/// UnaryExprAST - Expression class for a unary operator.
+class UnaryExprAST : public decafAST {
+	int Op; // use the token value of the operator
+	decafAST *Expr;
+public:
+	UnaryExprAST(int op, decafAST *expr) : Op(op), Expr(expr) {}
+	~UnaryExprAST() { delete Expr; }
+	string str() { return string("UnaryExpr") + "(" + UnaryOpString(Op) + "," + getString(Expr); }
+
+};
+
+/// VariableExprAST - Expression class for variables like "a".
+class VariableExprAST : public decafAST {
+	string Name;
+public:
+	VariableExprAST(string name) : Name(name) {}
+	string str() { return string("VariableExpr") + "(" + Name + ")"; }
+};
+
+class ArrayLocExprAST : public decafAST {
+	string Name;
+	decafAST *AST;
+public:
+	ArrayLocExprAST(string name, decafAST *ast) : Name(name), AST(ast) {}
+	~ArrayLocExprAST() { delete AST; }
+	string str() { return string("ArrayLocExpr") + "(" + Name + "," + getString(AST) + ")"; }
+};
+
+class AssignArrayAST : public decafAST {
+	string Name; // location to assign value
+	decafAST *Value;
+	decafAST *Expr;
+public:
+	AssignArrayAST(string name, decafAST *expr, decafAST *value) : Name(name), Value(value), Expr(expr) {}
+	~AssignArrayAST() { 
+		if (Value != NULL) { delete Value; }
+	}
+	string str() { return string("AssignArrayLoc") + "(" + Name + "," + getString(Expr) + "," + getString(Value) + ")"; }
 };

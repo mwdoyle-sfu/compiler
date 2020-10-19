@@ -50,7 +50,7 @@ using namespace std;
 %type <ast> vardecl bool_constant extern_list decafpackage externvars fieldtype constant vardecls statement_list
 %type <ast>  externtype externdefn field_decl field_decls methoddecl methoddecls methodtype methodblock
 %type <ast>  externvar statement assigns assign lvalue expr methodcall methodarguments methodargument
-
+%type <ast> arraydecl
 
 %left T_OR
 %left T_AND
@@ -155,8 +155,6 @@ field_decl: T_VAR T_ID fieldtype T_SEMICOLON { $$ = new FieldDeclarationNoAssign
     |       T_VAR T_ID fieldtype T_ASSIGN constant T_SEMICOLON { $$ = new FieldDeclarationAST($3,*$2, $5); }
     ;
 
-
-
 fieldtype: T_INTTYPE { $$ = new GenericAST("IntType"); }
     |      T_BOOL { $$ = new GenericAST("BoolType"); }
     ;
@@ -200,18 +198,11 @@ statement_list: statement statement_list { decafStmtList *slist = (decafStmtList
     |           /* empty */ {decafStmtList *slist = new decafStmtList(); $$ = slist;}   
     ;
 
-// statement_list: {decafStmtList *slist = new decafStmtList(); $$ = slist;}
-
-
-
-
-
-
 
 // new stuff
 
 statement: methodcall T_SEMICOLON { $$ = $1;}
-    // |      assign T_SEMICOLON { $$ = $1; }
+    |      assign T_SEMICOLON { $$ = $1; }
 //     // |       if { $$ = $1; }
 //     // |       T_WHILE T_LPAREN expr T_RPAREN block { $$ = new WhileAST($3,$5); }
 //     // |       T_FOR T_LPAREN assigns T_SEMICOLON expr T_SEMICOLON assigns T_RPAREN block { $$ = new ForAST($3,$5,$7,$9);}
@@ -219,7 +210,7 @@ statement: methodcall T_SEMICOLON { $$ = $1;}
 //     // |       T_CONTINUE T_SEMICOLON { $$ = new GenericAST("ContinueStmt");}
 //     // |       return { $$ = $1;}
 //     // |       block { $$ = $1; }
-//     ;
+    ;
 
 // // below here...
 
@@ -228,37 +219,36 @@ statement: methodcall T_SEMICOLON { $$ = $1;}
 //     ;
 
 // check the formatting
-// assign: T_ID T_ASSIGN expr { $$ = new AssignVarAST(*$1, $3); delete $1; }
-    // |   T_ID T_LSB expr T_RSB T_ASSIGN expr { $$ = new AssignArrayAST(*$1,$3,$6); }
+assign: T_ID T_ASSIGN expr { $$ = new AssignVarAST(*$1, $3); delete $1; }
+    |   T_ID T_LSB expr T_RSB T_ASSIGN expr { $$ = new AssignArrayAST(*$1,$3,$6); }
     ;
  
 expr: constant { $$ = $1; }
-
-// | lvalue { $$ = $1; }
-    // | methodcall { $$ = $1; }
-//     | expr T_PLUS expr { $$ = new BinaryExprAST(T_PLUS, $1, $3); }
-//     | expr T_MINUS expr { $$ = new BinaryExprAST(T_MINUS, $1, $3); }
-//     | expr T_MULT expr { $$ = new BinaryExprAST(T_MULT, $1, $3); }
-//     | expr T_DIV expr { $$ = new BinaryExprAST(T_DIV, $1, $3); }
-//     | expr T_MOD expr { $$ = new BinaryExprAST(T_MOD, $1, $3); }
-//     | expr T_LEFTSHIFT expr { $$ = new BinaryExprAST(T_LEFTSHIFT, $1, $3); }
-//     | expr T_RIGHTSHIFT expr { $$ = new BinaryExprAST(T_RIGHTSHIFT, $1, $3); }
-//     | expr T_AND expr { $$ = new BinaryExprAST(T_AND, $1, $3); }
-//     | expr T_OR expr { $$ = new BinaryExprAST(T_OR, $1, $3); }
-//     | expr T_EQ expr { $$ = new BinaryExprAST(T_EQ, $1, $3); }
-//     | expr T_GEQ expr { $$ = new BinaryExprAST(T_GEQ, $1, $3); }
-//     | expr T_GT expr { $$ = new BinaryExprAST(T_GT, $1, $3); }
-//     | expr T_LEQ expr { $$ = new BinaryExprAST(T_LEQ, $1, $3); }
-//     | expr T_LT expr { $$ = new BinaryExprAST(T_LT, $1, $3); }
-//     | expr T_NEQ expr { $$ = new BinaryExprAST(T_NEQ, $1, $3); }
-//     | T_MINUS expr %prec UMINUS { $$ = new UnaryExprAST(T_MINUS, $2); }
-//     | T_NOT expr { $$ = new UnaryExprAST(T_NOT, $2); }
-//     | T_LPAREN expr T_RPAREN { $$ = $2; }
+    | lvalue { $$ = $1; }
+    | methodcall { $$ = $1; }
+    | expr T_PLUS expr { $$ = new BinaryExprAST(T_PLUS, $1, $3); }
+    | expr T_MINUS expr { $$ = new BinaryExprAST(T_MINUS, $1, $3); }
+    | expr T_MULT expr { $$ = new BinaryExprAST(T_MULT, $1, $3); }
+    | expr T_DIV expr { $$ = new BinaryExprAST(T_DIV, $1, $3); }
+    | expr T_MOD expr { $$ = new BinaryExprAST(T_MOD, $1, $3); }
+    | expr T_LEFTSHIFT expr { $$ = new BinaryExprAST(T_LEFTSHIFT, $1, $3); }
+    | expr T_RIGHTSHIFT expr { $$ = new BinaryExprAST(T_RIGHTSHIFT, $1, $3); }
+    | expr T_AND expr { $$ = new BinaryExprAST(T_AND, $1, $3); }
+    | expr T_OR expr { $$ = new BinaryExprAST(T_OR, $1, $3); }
+    | expr T_EQ expr { $$ = new BinaryExprAST(T_EQ, $1, $3); }
+    | expr T_GEQ expr { $$ = new BinaryExprAST(T_GEQ, $1, $3); }
+    | expr T_GT expr { $$ = new BinaryExprAST(T_GT, $1, $3); }
+    | expr T_LEQ expr { $$ = new BinaryExprAST(T_LEQ, $1, $3); }
+    | expr T_LT expr { $$ = new BinaryExprAST(T_LT, $1, $3); }
+    | expr T_NEQ expr { $$ = new BinaryExprAST(T_NEQ, $1, $3); }
+    | T_MINUS expr %prec UMINUS { $$ = new UnaryExprAST(T_MINUS, $2); }
+    | T_NOT expr { $$ = new UnaryExprAST(T_NOT, $2); }
+    | T_LPAREN expr T_RPAREN { $$ = $2; }
     ;
 
-// lvalue: T_ID { $$ = new VariableExprAST(*$1); delete $1; }
-//     |   T_ID T_LSB expr T_RSB { $$ = new ArrayLocExprAST(*$1,$3);}
-//     ;
+lvalue: T_ID { $$ = new VariableExprAST(*$1); delete $1; }
+    |   T_ID T_LSB expr T_RSB { $$ = new ArrayLocExprAST(*$1,$3);}
+    ;
 
 methodcall: T_ID T_LPAREN T_RPAREN {$$ = new MethodCallAST(*$1, NULL); }
     |       T_ID T_LPAREN methodarguments T_RPAREN { $$ = new MethodCallAST(*$1,$3); }
