@@ -11,6 +11,63 @@ using namespace std;
 int lineno = 1;
 int tokenpos = 1;
 
+
+int get_intconstant(const char *s) {
+  if ((s[0] == '0') && (s[1] == 'x')) {
+    int x;
+    sscanf(s, "%x", &x);
+    return x;
+  } else {
+    return atoi(s);
+  }
+}
+
+int get_charconstant(const char *s) {
+  if (s[1] == '\\') { // backslashed char
+    switch(s[2]) {
+    case 't': return (int)'\t';
+    case 'v': return (int)'\v';
+    case 'r': return (int)'\r';
+    case 'n': return (int)'\n';
+    case 'a': return (int)'\a';
+    case 'f': return (int)'\f';
+    case 'b': return (int)'\b';
+    case '\\': return (int)'\\';
+    case '\'': return (int)'\'';
+    default: throw runtime_error("unknown char constant\n");
+    }
+  } else {
+    return (int)s[1];
+  }
+}
+
+string *process_string (const char *s) {
+  string *ns = new string("");
+  size_t len = strlen(s);
+  // remove the double quotes, use s[1..len-1]
+  for (int i = 1; i < len-1; i++) {
+    if (s[i] == '\\') {
+      i++;
+      switch(s[i]) {
+      case 't': ns->push_back('\t'); break;
+      case 'v': ns->push_back('\v'); break;
+      case 'r': ns->push_back('\r'); break;
+      case 'n': ns->push_back('\n'); break;
+      case 'a': ns->push_back('\a'); break;
+      case 'f': ns->push_back('\f'); break;
+      case 'b': ns->push_back('\b'); break;
+      case '\\': ns->push_back('\\'); break;
+      case '\'': ns->push_back('\''); break;
+      case '\"': ns->push_back('\"'); break;
+      default: throw runtime_error("unknown char escape\n");  
+      }
+    } else {
+      ns->push_back(s[i]);
+    }
+  }
+  return ns;
+}
+
 %}
 
 %option yylineno
@@ -67,18 +124,25 @@ string_lit \"(({char}|{escaped_char}))*\"
   /*
     Pattern definitions for all tokens 
   */
-
+&&                         { return T_AND; }
 =                          { return T_ASSIGN; }  
 bool                       { return T_BOOL; }
-{char_lit}                 { return T_CHARCONSTANT; }
+break                      { return T_BREAK; }
+{char_lit}                 { yylval.number = get_charconstant(yytext); return T_CHARCONSTANT;  }
 ,                          { return T_COMMA; }
+\/                         { return T_DIV; }
+==                         { return T_EQ; }
+
 extern                     { return T_EXTERN; }
+\>=                        { return T_GEQ; }
+\>                         { return T_GT; }
+
 false                      { return T_FALSE; }
+for                        { return T_FOR; }
+
 func                       { return T_FUNC; }
 int                        { return T_INTTYPE; }
-\(                         { return T_LPAREN; }
-\)                         { return T_RPAREN; }
-{int_lit}                  { return T_INTCONSTANT; }
+(0x[0-9a-fA-F]+)|([0-9]+)                   { yylval.number = get_intconstant(yytext); return T_INTCONSTANT; }
 
 package                    { return T_PACKAGE; }
 true                       { return T_TRUE; }
@@ -86,10 +150,33 @@ void                       { return T_VOID; }
 
 
 \{                         { return T_LCB; }
+\<<                        { return T_LEFTSHIFT; }
+\<=                        { return T_LEQ; }
+
+\[                         { return T_LSB; }
+\<                         { return T_LT; }
+
+\(                         { return T_LPAREN; }
+-                          { return T_MINUS; }
+\%                         { return T_MOD; }
+
+\*                         { return T_MULT; }
+\!=                        { return T_NEQ; }
+!                          { return T_NOT; }
+
+\+                         { return T_PLUS; }
+\|\|                       { return T_OR; }
+
 \}                         { return T_RCB; }
+\>>                        { return T_RIGHTSHIFT; }
+\)                         { return T_RPAREN; }
+\]                           { return T_RSB; }
+
 \;                         { return T_SEMICOLON; }
 string                     { return T_STRINGTYPE; }
+{string_lit}               { yylval.sval = process_string(yytext); return T_STRINGCONSTANT; }
 var                        { return T_VAR; }
+while                      { return T_WHILE; }
 
 [a-zA-Z\_][a-zA-Z\_0-9]*   { yylval.sval = new string(yytext); return T_ID; } /* note that identifier pattern must be after all keywords */
 [\t\r\n\a\v\b ]+           { } /* ignore whitespace */

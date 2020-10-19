@@ -1,5 +1,5 @@
 
-#include "default-defs.h"
+#include "decafast-defs.h"
 #include <list>
 #include <ostream>
 #include <iostream>
@@ -21,15 +21,6 @@ string getType(int Op) {
 		default: throw runtime_error("unknown type in TypeString call");
 	}
 }
-
-string convertInt(int number) {
-	stringstream ss;
-	ss << number;
-	return ss.str();
-}
-
-
-
 
 
 /// decafAST - Base class for all abstract syntax tree nodes.
@@ -147,6 +138,16 @@ public:
 	string str() { return string("FieldDecl") + "(" + Name + "," + getString(LHS) + "," + string("Scalar") + ")";  }
 };
 
+class FieldDeclarationAST : public decafAST {
+	decafAST *LHS,*RHS;
+	string Name;
+public:
+	FieldDeclarationAST(decafAST *lhs, string name, decafAST *rhs) : LHS(lhs), Name(name), RHS(rhs) {}
+	~FieldDeclarationAST() { delete LHS; delete RHS; }
+	string str() { return string("FieldDecl") + "(" + Name + "," + getString(LHS) + "," + getString(RHS) + ")";  }
+};
+
+
 class BoolAST : public decafAST {
 	bool B;
 public: 
@@ -162,12 +163,24 @@ public:
 	} 
 };
 
+string convertInt(int number) {
+	stringstream ss;
+	ss << number;
+	return ss.str();
+}
+
+// string buildString1(const char *Name, decafAST *a) {
+// 	return string(Name) + "(" + getString(a) + ")";
+// }
+
+
 class NumberExprAST : public decafAST {
 	int Val;
 public:
 	NumberExprAST(int val) : Val(val) {}
-	string str() { return string("Number") + "(" + convertInt(Val) + ")"; }
+	string str() { return string("NumberExpr") + "(" + convertInt(Val) + ")"; }
 };
+
 
 class MethodDeclarationAST : public decafAST {
 	string Name;
@@ -193,4 +206,37 @@ public:
 	VarDefMethodBlockAST(int op, string name) : Op(op), Name(name){}
 	~VarDefMethodBlockAST() {  }
 	string str() { return string("VarDef") + "(" + getType(Op) + ")"; }
+};
+
+class MethodCallAST : public decafAST {
+	string Name;
+	decafAST *AST;
+public:
+	MethodCallAST(string name, decafAST *ast) : Name(name), AST(ast) {}
+	~MethodCallAST() { 
+		if (AST != NULL) { delete AST; }
+	}
+	string str() { return string("MethodCall") + "(" + Name + "," + getString(AST) + ")"; }
+};
+
+/// StringConstAST - string constant
+class StringConstAST : public decafAST {
+	string StringConst;
+public:
+	StringConstAST(string s) : StringConst(s) {}
+	string str() { return string("StringConstant") + "(" + "\"" + StringConst + "\"" + ")"; }
+
+};
+
+
+/// AssignVarAST - assign value to a variable
+class AssignVarAST : public decafAST {
+	string Name; // location to assign value
+	decafAST *Value;
+public:
+	AssignVarAST(string name, decafAST *value) : Name(name), Value(value) {}
+	~AssignVarAST() { 
+		if (Value != NULL) { delete Value; }
+	}
+	string str() { return string("AssignVar") + "(" + Name + "," + getString(Value) + ")"; }
 };
